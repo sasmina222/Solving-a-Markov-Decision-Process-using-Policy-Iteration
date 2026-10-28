@@ -126,19 +126,70 @@ If the improved policy is the same as the old policy, the policy is considered s
 
 ```python
 
-# -------------------------------------------------
 # Policy Evaluation
-# -------------------------------------------------
+def policy_evaluation(env, policy, gamma=0.99, theta=1e-8):
+    V = np.zeros(n_states)
+    iteration = 0
+
+    while True:
+        delta = 0
+
+        for s in range(n_states):
+            v = V[s]
+            new_value = 0
+
+            for a in range(n_actions):
+                for prob, next_state, reward, done in env.P[s][a]:
+                    new_value += policy[s, a] * prob * (
+                        reward + gamma * V[next_state] * (not done)
+                    )
+
+            V[s] = new_value
+            delta = max(delta, abs(v - V[s]))
+
+        iteration += 1
+
+        if delta < theta:
+            break
+
+    return V, iteration
 
 
 
-# -------------------------------------------------
 # Policy Improvement
-# -------------------------------------------------
+def policy_improvement(env, V, gamma=0.99):
+    new_policy = np.zeros((n_states, n_actions))
 
-#-------------------------------------------------
+    for s in range(n_states):
+        action_values = np.zeros(n_actions)
+
+        for a in range(n_actions):
+            for prob, next_state, reward, done in env.P[s][a]:
+                action_values[a] += prob * (
+                    reward + gamma * V[next_state] * (not done)
+                )
+
+        best_action = np.argmax(action_values)
+        new_policy[s, best_action] = 1.0
+
+    return new_policy
+    
 # Policy Iteration
-# -------------------------------------------------
+
+def policy_iteration(env, gamma=0.99, theta=1e-8):
+    policy = np.ones((n_states, n_actions)) / n_actions
+
+    while True:
+        V, iterations = policy_evaluation(env, policy, gamma, theta)
+
+        new_policy = policy_improvement(env, V, gamma)
+
+        if np.array_equal(policy, new_policy):
+            break
+
+        policy = new_policy
+
+    return policy, V
 
 
 
@@ -147,16 +198,23 @@ If the improved policy is the same as the old policy, the policy is considered s
 
 ## Output
 
-```text
 
-Total policy iterations: 
+
+Total policy iterations:
+
+<img width="485" height="244" alt="image" src="https://github.com/user-attachments/assets/b7d97841-09c2-4add-9175-f521f5e51080" />
+
 
 Optimal State-Value Function:
 
 
+<img width="283" height="128" alt="image" src="https://github.com/user-attachments/assets/6f34e265-3e5a-4fca-8401-869fae83a085" />
+
 Optimal Policy:
 
-```
+<img width="327" height="119" alt="image" src="https://github.com/user-attachments/assets/37799c80-21fb-4d9c-9509-d6f4b4f09517" />
+
+
 
 
 
@@ -164,17 +222,12 @@ Optimal Policy:
 
 ## Result
 
-```text
+The Policy Iteration algorithm was successfully implemented, and the optimal state-value function and optimal policy for the FrozenLake-v1 environment were obtained. The algorithm converged to a stable policy, achieving the objective of solving the Markov Decision Process.
 
-
-
-```
 ---
 
 ## Inference
-```text
 
-
-```
+Thus, the Policy Evaluation and Policy Iteration algorithms were implemented successfully using the FrozenLake environment. Policy Evaluation converged in 38 iterations for the initial random policy. Policy Iteration then obtained the optimal state-value function and optimal policy by repeatedly evaluating and improving the policy. The results show that the agent can identify suitable actions to reach the goal while avoiding holes.
 ---
 
